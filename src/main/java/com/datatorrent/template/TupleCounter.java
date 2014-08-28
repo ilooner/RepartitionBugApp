@@ -13,21 +13,22 @@ import com.datatorrent.api.DefaultOutputPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TupleCounter<T> extends BaseOperator
+public class TupleCounter extends BaseOperator
 {
   private static final Logger LOG = LoggerFactory.getLogger(TupleCounter.class);
-  public final transient DefaultInputPort<T> input = new DefaultInputPort<T>() {
+  public final transient DefaultInputPort<EventId> input = new DefaultInputPort<EventId>() {
 
     @Override
-    public void process(T tuple)
+    public void process(EventId tuple)
     {
       tupleCounter++;
+      eventOutput.emit(tuple);
     }
   };
   
   private transient long windowId;
-  private transient long time = System.currentTimeMillis();
-  public final transient DefaultOutputPort<String> output = new DefaultOutputPort<String>();
+  public final transient DefaultOutputPort<String> counterOutput = new DefaultOutputPort<String>();
+  public final transient DefaultOutputPort<EventId> eventOutput = new DefaultOutputPort<EventId>();
   
   protected long tupleCounter = 0;
   
@@ -46,6 +47,6 @@ public class TupleCounter<T> extends BaseOperator
   @Override
   public void endWindow()
   {
-    output.emit("TupleCounter " + windowId + " : " + tupleCounter);
+    counterOutput.emit("TupleCounter " + windowId + " : " + tupleCounter);
   }
 }

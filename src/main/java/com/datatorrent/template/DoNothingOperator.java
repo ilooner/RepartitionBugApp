@@ -8,8 +8,11 @@ import com.datatorrent.api.Partitioner;
 import com.datatorrent.api.StatsListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 import org.slf4j.LoggerFactory;
 
@@ -17,14 +20,17 @@ public class DoNothingOperator implements InputOperator, Partitioner<DoNothingOp
 {
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(DoNothingOperator.class);
   
-  public final transient DefaultOutputPort<Integer> output = new DefaultOutputPort<Integer>();
-  protected long counter = 200;
+  public final transient DefaultOutputPort<EventId> output = new DefaultOutputPort<EventId>();
+  protected Queue<Long> batchIds = new LinkedList<Long>();
   protected Random random = new Random();
   protected long lastRepartition = 0;
   protected boolean firstRepartition = true;
   protected boolean secondRepartition = true;
   protected long emitCount = 0;
-    
+  protected long partitionId = 0;
+  private transient long windowId;
+  private transient int operatorId;
+  
   public DoNothingOperator()
   {
   }
@@ -37,32 +43,38 @@ public class DoNothingOperator implements InputOperator, Partitioner<DoNothingOp
   @Override
   public void beginWindow(long windowId)
   {
+    this.windowId = windowId;
   }
 
   @Override
   public void endWindow()
   {
-    if(counter == 0)
+    if(batchIds.isEmpty())
     {
       return;
     }
     
-    counter--;
+    EventId eventId = new EventId();
     
     for(int i = 0;
         i < 1000;
         i++)
     {
+      eventId.batchId = batchIds.poll();
+      eventId.tupleId = i;
+      eventId.windowId = windowId;
+      eventId.operatorId = operatorId;
+      eventId.partitionId = partitionId;
+      
       emitCount++;
-      output.emit(random.nextInt());
+      output.emit(eventId);
     }
-    
-    
   }
 
   @Override
   public void setup(Context.OperatorContext context)
   {
+    this.operatorId = context.getId();
   }
 
   @Override
@@ -74,42 +86,49 @@ public class DoNothingOperator implements InputOperator, Partitioner<DoNothingOp
   public Collection<Partition<DoNothingOperator>> definePartitions(Collection<Partition<DoNothingOperator>> partitions, int incrementalCapacity)
   {
     this.lastRepartition = System.currentTimeMillis();
-    long tempCounterTotal = 0;
     long tempEmitTotal = 0;
+    Queue<Long> totalBatchIds = new LinkedList<Long>();
+    long partitionId = partitions.iterator().next().getPartitionedInstance().partitionId;
+    partitionId++;
     
     if(!firstRepartition)
     {
       for(Partition<DoNothingOperator> partition: partitions)
       {
         tempEmitTotal += partition.getPartitionedInstance().emitCount;
-        tempCounterTotal += partition.getPartitionedInstance().counter;
+        totalBatchIds.addAll(partition.getPartitionedInstance().batchIds);
       }
+      
+      Collections.sort((List<Long>) totalBatchIds);
     }
     else
     {
-      tempCounterTotal = 2000;
+      for(long counter = 0L;
+          counter < 2000L;
+          counter++)
+      {
+        totalBatchIds.add(counter);
+      }
     }
     
-    LOG.debug("TempCounterTotal: {}", tempCounterTotal);
-    LOG.debug("Emit Count: {}", tempEmitTotal);
-    
-    long numOperators = 0;
+    int numOperators = 0;
     
     if(firstRepartition)
     {
       numOperators = 10;
     }
-    else if(tempCounterTotal > 20)
+    else if(totalBatchIds.size() > 20)
     {
       numOperators = random.nextInt(10) + 1;
     }
-    else if(tempCounterTotal <= 20)
+    else if(totalBatchIds.size() <= 20)
     {
       numOperators = 1;
     }
     
     this.firstRepartition = false;
-    long newCount = tempCounterTotal / numOperators;
+    int tempCounterTotal = totalBatchIds.size();
+    long newCount = totalBatchIds.size() / numOperators;
     
     List<Partition<DoNothingOperator>> newPartitions = new ArrayList<Partition<DoNothingOperator>>();
     
@@ -118,18 +137,35 @@ public class DoNothingOperator implements InputOperator, Partitioner<DoNothingOp
         counter++)
     {
       DoNothingOperator doNothingOperator = new DoNothingOperator();
-      doNothingOperator.counter = newCount;
+      doNothingOperator.batchIds.clear();
+      
+      for(int batchCounter = 0;
+          batchCounter < newCount;
+          batchCounter++)
+      {
+        doNothingOperator.batchIds.add(totalBatchIds.poll());
+      }
       
       if(counter == 0)
       {
         doNothingOperator.emitCount = tempEmitTotal;
-        doNothingOperator.counter += tempCounterTotal % numOperators;
+        int remainder = tempCounterTotal % numOperators;
+        
+        for(int remainderCounter = 0;
+            remainderCounter < remainder; 
+            remainderCounter++)
+        {
+          doNothingOperator.batchIds.add(totalBatchIds.poll());
+        }
+        
+        //doNothingOperator.counter += tempCounterTotal % numOperators;
       }
       
       doNothingOperator.lastRepartition = this.lastRepartition;
       doNothingOperator.firstRepartition = false;
       doNothingOperator.secondRepartition = secondRepartition;
-    
+      doNothingOperator.partitionId = partitionId;
+      
       newPartitions.add(new DefaultPartition<DoNothingOperator>(doNothingOperator));
     }
     

@@ -42,7 +42,11 @@ public class Application implements StreamingApplication
       ConsoleOutputOperator console = dag.addOperator("console", new ConsoleOutputOperator());
       dag.getOperatorMeta("console").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
       
-      dag.addStream("counterstream", tupleCounter.output, console.input).setLocality(locality);
+      EventWriter eventWriter = dag.addOperator("eventwriter", new EventWriter());
+      dag.getOperatorMeta("eventwriter").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
+      
       dag.addStream("donothingstream", doNothingOperator.output, tupleCounter.input).setLocality(locality);
+      dag.addStream("counterstream", tupleCounter.counterOutput, console.input).setLocality(locality);
+      dag.addStream("eventwriter", tupleCounter.eventOutput, eventWriter.input).setLocality(locality);
     }
 }
