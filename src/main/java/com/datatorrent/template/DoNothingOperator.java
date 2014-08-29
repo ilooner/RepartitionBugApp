@@ -55,12 +55,13 @@ public class DoNothingOperator implements InputOperator, Partitioner<DoNothingOp
     }
     
     EventId eventId = new EventId();
+    long batchId = batchIds.poll();
     
     for(int i = 0;
         i < 1000;
         i++)
     {
-      eventId.batchId = batchIds.poll();
+      eventId.batchId = batchId;
       eventId.tupleId = i;
       eventId.windowId = windowId;
       eventId.operatorId = operatorId;
