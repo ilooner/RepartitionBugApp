@@ -6,7 +6,7 @@ import org.apache.hadoop.fs.Path;
 
 public class EventWriter extends AbstractHdfsFileOutputOperator<EventId>
 {
-  public static final String FILE_NAME = "hdfs://node2.morado.com/user/tim/repartitionTest";
+  public static final String FILE_NAME = "hdfs://node2.morado.com/user/tim/repartitionTest/reptest.txt";
   
   @Override
   protected void processTuple(EventId t)
