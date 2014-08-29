@@ -22,6 +22,7 @@ public class TupleCounter extends BaseOperator
     public void process(EventId tuple)
     {
       tupleCounter++;
+      tuple.recieveWindowId = windowId;
       eventOutput.emit(tuple);
     }
   };

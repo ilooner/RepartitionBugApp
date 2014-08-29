@@ -22,14 +22,14 @@ public class ApplicationTest {
 
   @Test
   public void testApplication() throws IOException, Exception {
-    /*try {
+    try {
       LocalMode lma = LocalMode.newInstance();
       new Application().populateDAG(lma.getDAG(), new Configuration(false));
       LocalMode.Controller lc = lma.getController();
       lc.run();
     } catch (ConstraintViolationException e) {
       Assert.fail("constraint violations: " + e.getConstraintViolations());
-    }*/
+    }
   }
 
 }

@@ -4,6 +4,7 @@ import com.datatorrent.api.Context;
 import com.datatorrent.api.DefaultOutputPort;
 import com.datatorrent.api.DefaultPartition;
 import com.datatorrent.api.InputOperator;
+import com.datatorrent.api.Operator;
 import com.datatorrent.api.Partitioner;
 import com.datatorrent.api.StatsListener;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class DoNothingOperator implements InputOperator, Partitioner<DoNothingOp
   {
     if(batchIds.isEmpty())
     {
+      Operator.Util.shutdown();
       return;
     }
     

@@ -13,26 +13,9 @@ import org.slf4j.LoggerFactory;
 public class EventWriter extends AbstractHdfsRollingFileOutputOperator<EventId>
 {
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(EventWriter.class);
-  public static final String FILE_NAME = "hdfs://node2.morado.com/user/tim/repartitionTest";
+  public static final String FILE_NAME = "/user/tim/repartitionTest";
   private int operatorId;
   private long windowId;
-  
-  @Override
-  protected void processTuple(EventId t)
-  {
-    try
-    {
-      if(bufferedOutput == null)
-      {
-        openFile(new Path(FILE_NAME));
-      }
-    
-      bufferedOutput.write(getBytesForTuple(t));
-    }
-    catch(Exception e)
-    {
-    }
-  }
 
   @Override
   protected byte[] getBytesForTuple(EventId t)
@@ -48,19 +31,6 @@ public class EventWriter extends AbstractHdfsRollingFileOutputOperator<EventId>
   }
   
   @Override
-  public void endWindow()
-  {
-    super.endWindow();
-    
-    try {
-      closeFile();
-    }
-    catch(IOException ex) {
-      throw new RuntimeException(ex);
-    }
-  }
-  
-  @Override
   public void setup(OperatorContext context)
   {
     operatorId = context.getId();
@@ -70,7 +40,7 @@ public class EventWriter extends AbstractHdfsRollingFileOutputOperator<EventId>
   @Override
   public Path nextFilePath()
   {
-    Path file = new Path(FILE_NAME, operatorId + "-" + windowId);
+    Path file = new Path(FILE_NAME, operatorId + "-" + Long.toHexString(windowId));
     
     try
     {
