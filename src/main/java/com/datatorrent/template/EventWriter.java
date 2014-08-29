@@ -1,12 +1,21 @@
 package com.datatorrent.template;
 
 import com.datatorrent.api.Context.OperatorContext;
+import com.datatorrent.lib.io.fs.AbstractFSDirectoryInputOperator;
 import com.datatorrent.lib.io.fs.AbstractHdfsFileOutputOperator;
+import com.datatorrent.lib.io.fs.AbstractHdfsRollingFileOutputOperator;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.LoggerFactory;
 
-public class EventWriter extends AbstractHdfsFileOutputOperator<EventId>
+public class EventWriter extends AbstractHdfsRollingFileOutputOperator<EventId>
 {
-  public static final String FILE_NAME = "hdfs://node2.morado.com/user/tim/repartitionTest/reptest.txt";
+  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(EventWriter.class);
+  public static final String FILE_NAME = "hdfs://node2.morado.com/user/tim/repartitionTest";
+  private int operatorId;
+  private long windowId;
   
   @Override
   protected void processTuple(EventId t)
@@ -32,29 +41,50 @@ public class EventWriter extends AbstractHdfsFileOutputOperator<EventId>
   }
   
   @Override
+  public void beginWindow(long windowId)
+  {
+    super.beginWindow(windowId);
+    this.windowId = windowId;
+  }
+  
+  @Override
   public void endWindow()
   {
-    try
-    {
+    super.endWindow();
+    
+    try {
       closeFile();
     }
-    catch(Exception e)
-    {
-      
+    catch(IOException ex) {
+      throw new RuntimeException(ex);
     }
   }
   
   @Override
   public void setup(OperatorContext context)
   {
+    operatorId = context.getId();
     super.setup(context);
+  }
+
+  @Override
+  public Path nextFilePath()
+  {
+    Path file = new Path(FILE_NAME, operatorId + "-" + windowId);
     
     try
     {
-      fs.delete(new Path(FILE_NAME), true);
+      if(fs.exists(file))
+      {
+        fs.delete(file, true);
+        LOG.info("Delete file {}", file.toString());
+      }
     }
-    catch(Exception e)
+    catch(IOException e)
     {
+      throw new RuntimeException(e);
     }
+    
+    return file;
   }
 }
