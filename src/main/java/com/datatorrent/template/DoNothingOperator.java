@@ -21,7 +21,7 @@ public class DoNothingOperator implements InputOperator, Partitioner<DoNothingOp
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(DoNothingOperator.class);
   
   public final transient DefaultOutputPort<EventId> output = new DefaultOutputPort<EventId>();
-  protected final Queue<Long> batchIds = new LinkedList<Long>();
+  protected Queue<Long> batchIds = new LinkedList<Long>();
   protected Random random = new Random();
   protected long lastRepartition = 0;
   protected boolean firstRepartition = true;
@@ -137,7 +137,7 @@ public class DoNothingOperator implements InputOperator, Partitioner<DoNothingOp
         counter++)
     {
       DoNothingOperator doNothingOperator = new DoNothingOperator();
-      doNothingOperator.batchIds.clear();
+      doNothingOperator.batchIds = new LinkedList<Long>();
       
       for(int batchCounter = 0;
           batchCounter < newCount;
