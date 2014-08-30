@@ -22,6 +22,11 @@ public class TupleCounter extends BaseOperator
     @Override
     public void process(EventId tuple)
     {
+      if(tuple.recieveWindowId != activationWindowId)
+      {
+        throw new RuntimeException("Activation Windows don't equal " + tuple.recieveWindowId + " " + activationWindowId);
+      }
+      
       assert(tuple.recieveWindowId == activationWindowId);
       tupleCounter++;
       tuple.recieveWindowId = windowId;
