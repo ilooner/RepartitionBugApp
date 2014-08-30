@@ -59,7 +59,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
   {
     if(batchIds.isEmpty())
     {
-      Operator.Util.shutdown();
+      //Operator.Util.shutdown();
       return;
     }
 
