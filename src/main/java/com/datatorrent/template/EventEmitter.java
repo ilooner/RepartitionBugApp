@@ -25,6 +25,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
 
   public final transient DefaultOutputPort<EventId> output = new DefaultOutputPort<EventId>();
   protected Queue<Long> batchIds = new LinkedList<Long>();
+  protected ArrayList<Long> processed = new ArrayList<Long>();
   protected Random random = new Random();
   protected long lastRepartition = 0;
   protected boolean firstRepartition = true;
@@ -33,6 +34,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
   protected long partitionId = 0;
   private long windowId;
   private transient int operatorId;
+  private long activationWindowId;
 
   @Override
   public void emitTuples()
@@ -73,15 +75,19 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
       eventId.windowId = windowId;
       eventId.operatorId = operatorId;
       eventId.partitionId = partitionId;
+      eventId.recieveWindowId = activationWindowId;
 
       emitCount++;
       output.emit(eventId);
     }
+
+    processed.add(batchId);
   }
 
   @Override
   public void setup(Context.OperatorContext context)
   {
+    activationWindowId = context.getValue(OperatorContext.ACTIVATION_WINDOW_ID);
     if (windowId == 0) {
       windowId = context.getValue(OperatorContext.ACTIVATION_WINDOW_ID);
     }
@@ -103,6 +109,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
     this.lastRepartition = System.currentTimeMillis();
     long tempEmitTotal = 0;
     Queue<Long> totalBatchIds = new LinkedList<Long>();
+
     long partitionId = partitions.iterator().next().getPartitionedInstance().partitionId;
     partitionId++;
 
@@ -112,6 +119,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
       {
         tempEmitTotal += partition.getPartitionedInstance().emitCount;
         totalBatchIds.addAll(partition.getPartitionedInstance().batchIds);
+        processed.addAll(partition.getPartitionedInstance().processed);
       }
 
       Collections.sort((List<Long>) totalBatchIds);
@@ -190,6 +198,18 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
   @Override
   public void partitioned(Map<Integer, Partition<EventEmitter>> partitions)
   {
+    logger.debug("processed = {}", processed);
+    for (Partition<EventEmitter> p: partitions.values()) {
+      logger.debug("tobeprocessed = {}", p.getPartitionedInstance().batchIds);
+    }
+
+    for (long l : processed) {
+      for (Partition<EventEmitter> p : partitions.values()) {
+        for (long b : p.getPartitionedInstance().batchIds) {
+          assert(b != l);
+        }
+      }
+    }
   }
 
   @Override
@@ -204,4 +224,11 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
 
     return new Response();
   }
+
+  @Override
+  public String toString()
+  {
+    return "EventEmitter{" + "batchIds=" + batchIds + ", emitCount=" + emitCount + ", partitionId=" + partitionId + ", windowId=" + windowId + '}';
+  }
+
 }

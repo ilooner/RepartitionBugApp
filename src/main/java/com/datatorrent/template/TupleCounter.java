@@ -8,6 +8,7 @@ package com.datatorrent.template;
 
 import com.datatorrent.api.BaseOperator;
 import com.datatorrent.api.Context;
+import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DefaultInputPort;
 import com.datatorrent.api.DefaultOutputPort;
 import org.slf4j.Logger;
@@ -21,22 +22,23 @@ public class TupleCounter extends BaseOperator
     @Override
     public void process(EventId tuple)
     {
+      assert(tuple.recieveWindowId == activationWindowId);
       tupleCounter++;
       tuple.recieveWindowId = windowId;
       eventOutput.emit(tuple);
     }
   };
-  
+
   private transient long windowId;
   public final transient DefaultOutputPort<String> counterOutput = new DefaultOutputPort<String>();
   public final transient DefaultOutputPort<EventId> eventOutput = new DefaultOutputPort<EventId>();
-  
+  private long activationWindowId;
   protected long tupleCounter = 0;
-  
+
   @Override
   public void setup(Context.OperatorContext context)
   {
-    LOG.info("Tuple Counter Setup");
+    activationWindowId = context.getValue(OperatorContext.ACTIVATION_WINDOW_ID);
   }
 
   @Override
