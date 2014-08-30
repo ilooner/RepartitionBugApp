@@ -17,7 +17,7 @@ public class EventId
   public String toString()
   {
     return batchId + ", tupleId=" + tupleId
-      + ", windowId=" + Long.toHexString(windowId) + ", partitionId=" + partitionId + ", operatorId=" + operatorId + ", recieveWindowId=" + Long.toHexString(recieveWindowId) + '}';
+      + ", windowId=" + Long.toHexString(windowId) + ", partitionId=" + partitionId + ", operatorId=" + operatorId + ", recieveWindowId=" + Long.toHexString(recieveWindowId) + "\n";
   }
 
   private static final Logger logger = LoggerFactory.getLogger(EventId.class);
