@@ -32,19 +32,19 @@ public class Application implements StreamingApplication
     public void populateDAG(DAG dag, Configuration conf)
     {
       dag.setAttribute(DAG.CHECKPOINT_WINDOW_COUNT, 1);
-      DoNothingOperator doNothingOperator = dag.addOperator("donothing", new DoNothingOperator());
+      EventEmitter doNothingOperator = dag.addOperator("donothing", new EventEmitter());
       dag.getOperatorMeta("donothing").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
-      
+
       TupleCounter tupleCounter = dag.addOperator("counter", new TupleCounter());
       dag.getOperatorMeta("counter").getAttributes().put(OperatorContext.INITIAL_PARTITION_COUNT, 1);
       dag.getOperatorMeta("counter").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
-      
+
       ConsoleOutputOperator console = dag.addOperator("console", new ConsoleOutputOperator());
       dag.getOperatorMeta("console").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
-      
+
       EventWriter eventWriter = dag.addOperator("eventwriter", new EventWriter());
       dag.getOperatorMeta("eventwriter").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
-      
+
       dag.addStream("donothingstream", doNothingOperator.output, tupleCounter.input).setLocality(locality);
       dag.addStream("counterstream", tupleCounter.counterOutput, console.input).setLocality(locality);
       dag.addStream("eventwriter", tupleCounter.eventOutput, eventWriter.input).setLocality(locality);

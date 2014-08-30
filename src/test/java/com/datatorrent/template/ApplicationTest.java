@@ -4,12 +4,6 @@
  */
 package com.datatorrent.template;
 
-import java.io.IOException;
-
-import javax.validation.ConstraintViolationException;
-
-import org.junit.Assert;
-
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
@@ -21,15 +15,12 @@ import com.datatorrent.api.LocalMode;
 public class ApplicationTest {
 
   @Test
-  public void testApplication() throws IOException, Exception {
-    try {
+  public void testApplication()
+  {
       LocalMode lma = LocalMode.newInstance();
       new Application().populateDAG(lma.getDAG(), new Configuration(false));
       LocalMode.Controller lc = lma.getController();
       lc.run();
-    } catch (ConstraintViolationException e) {
-      Assert.fail("constraint violations: " + e.getConstraintViolations());
-    }
   }
 
 }
