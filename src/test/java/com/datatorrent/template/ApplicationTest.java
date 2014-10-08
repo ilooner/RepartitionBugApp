@@ -4,6 +4,9 @@
  */
 package com.datatorrent.template;
 
+import java.io.File;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
@@ -15,12 +18,16 @@ import com.datatorrent.api.LocalMode;
 public class ApplicationTest {
 
   @Test
-  public void testApplication()
+  public void testApplication() throws Exception
   {
-      LocalMode lma = LocalMode.newInstance();
-      new Application().populateDAG(lma.getDAG(), new Configuration(false));
-      LocalMode.Controller lc = lma.getController();
-      lc.run();
+    File testDir = new File("target/testdata");
+    FileUtils.deleteDirectory(testDir);
+    Configuration conf = new Configuration(false);
+    conf.set("dt.operator.eventwriter.prop.filePath", testDir.getPath());
+    LocalMode lma = LocalMode.newInstance();
+    lma.prepareDAG(new Application(), conf);    
+    LocalMode.Controller lc = lma.getController();
+    lc.run();
   }
 
 }

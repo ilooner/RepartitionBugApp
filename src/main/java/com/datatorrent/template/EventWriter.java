@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class EventWriter extends AbstractHdfsRollingFileOutputOperator<EventId>
 {
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(EventWriter.class);
-  public static final String FILE_NAME = "/user/tim/repartitionTest";
+  //public static final String FILE_NAME = "/user/tim/repartitionTest";
   private int operatorId;
   private long windowId;
 
@@ -40,7 +40,7 @@ public class EventWriter extends AbstractHdfsRollingFileOutputOperator<EventId>
   @Override
   public Path nextFilePath()
   {
-    Path file = new Path(FILE_NAME, operatorId + "-" + Long.toHexString(windowId));
+    Path file = new Path(super.filePath, operatorId + "-" + Long.toHexString(windowId));
     
     try
     {

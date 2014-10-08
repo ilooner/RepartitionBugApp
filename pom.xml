@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.datatorrent</groupId>
-  <version>1.0.4-SNAPSHOT</version>
+  <version>1.0.5-SNAPSHOT</version>
   <artifactId>repartition-test-app-origin</artifactId>
   <packaging>jar</packaging>
 
@@ -13,14 +13,14 @@
 
   <!-- repository to provide the DataTorrent artifacts -->
   <repositories>
-    <repository>
+    <!--repository>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
       <id>Datatorrent-Releases</id>
       <name>DataTorrent Release Repository</name>
       <url>file://~/.m2/repository/com/datatorrent</url>
-    </repository>
+    </repository-->
   </repositories>
 
   <build>
@@ -75,11 +75,11 @@
       <artifactId>malhar-contrib</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
+    <!--dependency>
       <groupId>com.datatorrent</groupId>
       <artifactId>malhar-demos</artifactId>
       <version>${project.version}</version>
-    </dependency>
+    </dependency-->
     <dependency>
       <groupId>com.datatorrent</groupId>
       <artifactId>dt-engine</artifactId>
