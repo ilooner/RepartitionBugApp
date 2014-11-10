@@ -67,11 +67,6 @@
       <artifactId>malhar-contrib</artifactId>
       <version>${datatorrent.version}</version>
     </dependency>
-    <!--dependency>
-      <groupId>com.datatorrent</groupId>
-      <artifactId>malhar-demos</artifactId>
-      <version>${project.version}</version>
-    </dependency-->
     <dependency>
       <groupId>com.datatorrent</groupId>
       <artifactId>dt-engine</artifactId>

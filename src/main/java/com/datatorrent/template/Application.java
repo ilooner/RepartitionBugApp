@@ -20,33 +20,26 @@ import com.datatorrent.api.DAG;
 import com.datatorrent.api.DAG.Locality;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
+
 import com.datatorrent.lib.io.ConsoleOutputOperator;
+
 import org.apache.hadoop.conf.Configuration;
 
 @ApplicationAnnotation(name = "RepartitionTestAppOriginal")
 public class Application implements StreamingApplication
 {
-    private final Locality locality = null;
+  private final Locality locality = null;
 
-    @Override
-    public void populateDAG(DAG dag, Configuration conf)
-    {
-      dag.setAttribute(DAG.CHECKPOINT_WINDOW_COUNT, 1);
-      EventEmitter doNothingOperator = dag.addOperator("donothing", new EventEmitter());
-      dag.getOperatorMeta("donothing").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
-
-      TupleCounter tupleCounter = dag.addOperator("counter", new TupleCounter());
-      dag.getOperatorMeta("counter").getAttributes().put(OperatorContext.INITIAL_PARTITION_COUNT, 1);
-      dag.getOperatorMeta("counter").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
-
-      ConsoleOutputOperator console = dag.addOperator("console", new ConsoleOutputOperator());
-      dag.getOperatorMeta("console").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
-
-      EventWriter eventWriter = dag.addOperator("eventwriter", new EventWriter());
-      dag.getOperatorMeta("eventwriter").getAttributes().put(OperatorContext.APPLICATION_WINDOW_COUNT, 1);
-
-      dag.addStream("donothingstream", doNothingOperator.output, tupleCounter.input).setLocality(locality);
-      dag.addStream("counterstream", tupleCounter.counterOutput, console.input).setLocality(locality);
-      dag.addStream("eventwriter", tupleCounter.eventOutput, eventWriter.input).setLocality(locality);
-    }
+  @Override
+  public void populateDAG(DAG dag, Configuration conf)
+  {
+    dag.setAttribute(DAG.CHECKPOINT_WINDOW_COUNT, 1);
+    EventEmitter emitter = dag.addOperator("Emitter", new EventEmitter());
+    TupleCounter tupleCounter = dag.addOperator("Counter", new TupleCounter());
+    ConsoleOutputOperator console = dag.addOperator("Console", new ConsoleOutputOperator());
+    EventWriter eventWriter = dag.addOperator("Writer", new EventWriter());
+    dag.addStream("donothingstream", emitter.output, tupleCounter.input);
+    dag.addStream("counterstream", tupleCounter.counterOutput, console.input);
+    dag.addStream("eventwriter", tupleCounter.eventOutput, eventWriter.input);
+  }
 }
