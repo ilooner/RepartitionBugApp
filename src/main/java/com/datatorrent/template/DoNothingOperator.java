@@ -52,8 +52,7 @@ public class DoNothingOperator implements InputOperator, Partitioner<DoNothingOp
   {
     if(batchIds.isEmpty())
     {
-      Operator.Util.shutdown();
-      return;
+      throw new ShutdownException();
     }
     
     EventId eventId = new EventId();
