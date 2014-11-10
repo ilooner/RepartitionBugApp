@@ -15,12 +15,14 @@
  */
 package com.datatorrent.template;
 
+import com.datatorrent.api.Context;
 import com.datatorrent.api.Context.OperatorContext;
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.DAG.Locality;
 import com.datatorrent.api.StreamingApplication;
 import com.datatorrent.api.annotation.ApplicationAnnotation;
 
+import com.datatorrent.lib.codec.KryoSerializableStreamCodec;
 import com.datatorrent.lib.io.ConsoleOutputOperator;
 
 import org.apache.hadoop.conf.Configuration;
@@ -28,7 +30,6 @@ import org.apache.hadoop.conf.Configuration;
 @ApplicationAnnotation(name = "RepartitionTestAppOriginal")
 public class Application implements StreamingApplication
 {
-  private final Locality locality = null;
 
   @Override
   public void populateDAG(DAG dag, Configuration conf)
@@ -41,5 +42,9 @@ public class Application implements StreamingApplication
     dag.addStream("donothingstream", emitter.output, tupleCounter.input);
     dag.addStream("counterstream", tupleCounter.counterOutput, console.input);
     dag.addStream("eventwriter", tupleCounter.eventOutput, eventWriter.input);
+    dag.setInputPortAttribute(tupleCounter.input, Context.PortContext.STREAM_CODEC, new KryoSerializableStreamCodec<Object>());
+    dag.setInputPortAttribute(console.input, Context.PortContext.STREAM_CODEC, new KryoSerializableStreamCodec<Object>());
+    dag.setInputPortAttribute(eventWriter.input, Context.PortContext.STREAM_CODEC, new KryoSerializableStreamCodec<Object>());
+
   }
 }

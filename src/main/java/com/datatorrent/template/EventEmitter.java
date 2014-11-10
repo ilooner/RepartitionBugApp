@@ -148,15 +148,12 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
              remainderCounter++) {
           emitter.batchIds.add(totalBatchIds.poll());
         }
-
-        //doNothingOperator.counter += tempCounterTotal % numOperators;
       }
 
       emitter.lastRepartition = this.lastRepartition;
       emitter.firstRepartition = false;
       emitter.secondRepartition = secondRepartition;
       emitter.partitionId = partitionId;
-
       newPartitions.add(new DefaultPartition<EventEmitter>(emitter));
     }
 
@@ -188,7 +185,6 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
       response.repartitionRequired = true;
       return response;
     }
-
     return new Response();
   }
 

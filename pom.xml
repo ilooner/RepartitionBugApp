@@ -64,11 +64,6 @@
     </dependency>
     <dependency>
       <groupId>com.datatorrent</groupId>
-      <artifactId>malhar-contrib</artifactId>
-      <version>${datatorrent.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.datatorrent</groupId>
       <artifactId>dt-engine</artifactId>
       <version>${datatorrent.version}</version>
       <scope>provided</scope>
@@ -77,6 +72,7 @@
       <groupId>com.datatorrent</groupId>
       <artifactId>dt-api</artifactId>
       <version>${datatorrent.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

@@ -1,8 +1,5 @@
 package com.datatorrent.template;
 
-import java.io.IOException;
-
-import org.apache.hadoop.fs.Path;
 import org.slf4j.LoggerFactory;
 
 import com.datatorrent.api.Context.OperatorContext;
@@ -12,9 +9,7 @@ import com.datatorrent.lib.io.fs.AbstractFSWriter;
 public class EventWriter extends AbstractFSWriter<EventId, EventId>
 {
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(EventWriter.class);
-  //public static final String FILE_NAME = "/user/tim/repartitionTest";
-  private int operatorId;
-  private long windowId;
+  private transient int operatorId;
 
   @Override
   protected byte[] getBytesForTuple(EventId t)
@@ -22,11 +17,31 @@ public class EventWriter extends AbstractFSWriter<EventId, EventId>
     return t.toString().getBytes();
   }
 
+  private transient String windowIdString;
+
+  public EventWriter()
+  {
+    append = false;
+    maxOpenFiles = 1;
+  }
+
   @Override
   public void beginWindow(long windowId)
   {
     super.beginWindow(windowId);
-    this.windowId = windowId;
+    windowIdString = Long.toString(windowId);
+  }
+
+  @Override
+  public void endWindow()
+  {
+    endOffsets.clear();
+  }
+
+  @Override
+  protected String getFileName(EventId tuple)
+  {
+    return operatorId + "/" + windowIdString;
   }
 
   @Override
@@ -34,23 +49,6 @@ public class EventWriter extends AbstractFSWriter<EventId, EventId>
   {
     operatorId = context.getId();
     super.setup(context);
-  }
-
-  @Override
-  protected String getFileName(EventId tuple)
-  {
-    Path file = new Path(super.filePath, operatorId + "-" + Long.toHexString(windowId));
-    try {
-      if (fs.exists(file)) {
-        fs.delete(file, true);
-        LOG.info("Delete file {}", file.toString());
-      }
-    }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    return file.getName();
   }
 
 }
