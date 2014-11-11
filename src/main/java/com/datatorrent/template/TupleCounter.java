@@ -19,7 +19,7 @@ public class TupleCounter extends BaseOperator
 {
   private transient long windowId;
   private long activationWindowId;
-  protected long tupleCounter = 0;
+  private long tupleCounter = 0;
   private static final Logger LOG = LoggerFactory.getLogger(TupleCounter.class);
 
   public final transient DefaultOutputPort<String> counterOutput = new DefaultOutputPort<String>();

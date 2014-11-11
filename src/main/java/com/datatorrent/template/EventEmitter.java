@@ -57,9 +57,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
     EventId eventId = new EventId();
     long batchId = batchIds.poll();
 
-    for (int i = 0;
-         i < throughPut;
-         i++) {
+    for (int i = 0; i < throughPut; i++) {
       eventId.batchId = batchId;
       eventId.tupleId = i;
       eventId.windowId = windowId;
@@ -102,17 +100,19 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
 
     long partitionId = partitions.iterator().next().getPartitionedInstance().partitionId;
     partitionId++;
-
+    int oldThroughPut = 0;
     if (!firstRepartition) {
       for (Partition<EventEmitter> partition : partitions) {
         tempEmitTotal += partition.getPartitionedInstance().emitCount;
         totalBatchIds.addAll(partition.getPartitionedInstance().batchIds);
         processed.addAll(partition.getPartitionedInstance().processed);
+        oldThroughPut += partition.getPartitionedInstance().throughPut;
       }
 
       Collections.sort((List<Long>) totalBatchIds);
     }
     else {
+      oldThroughPut = 10000;
       for (long counter = 0L;
            counter < 2000L;
            counter++) {
@@ -125,21 +125,15 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
       numOperators = 10;
     }
     else if (totalBatchIds.size() > 20) {
-      numOperators = random.nextInt(10) + 2;
+      numOperators = random.nextInt(10) + 1;
     }
     else if (totalBatchIds.size() <= 20) {
       numOperators = 1;
     }
-
-    int oldThroughPut = 0;
-    Iterator<Partition<EventEmitter>> itr = partitions.iterator();
-    while(itr.hasNext()){
-      oldThroughPut += itr.next().getPartitionedInstance().throughPut;
-    }
     int newThroughPut =  oldThroughPut/ numOperators;
 
     logger.info("called repartition at windowId {} and total emitted tuples {} ", partitions.iterator().next().getPartitionedInstance().windowId, tempEmitTotal);
-    logger.info("new partitions {}", numOperators);
+    logger.info("new partitions {}, old througput {}", numOperators, oldThroughPut);
 
     this.firstRepartition = false;
     int tempCounterTotal = totalBatchIds.size();
