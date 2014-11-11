@@ -12,7 +12,14 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
 {
   private static final Logger logger = LoggerFactory.getLogger(EventEmitter.class);
 
-  public final transient DefaultOutputPort<EventId> output = new DefaultOutputPort<EventId>();
+  public final transient DefaultOutputPort<EventId> output = new DefaultOutputPort<EventId>()
+  {
+    @Override
+    public Unifier<EventId> getUnifier()
+    {
+      return (new EventEmitterUnifier());
+    }
+  };
   protected Queue<Long> batchIds = new LinkedList<Long>();
   protected ArrayList<Long> processed = new ArrayList<Long>();
   protected Random random = new Random();
@@ -40,6 +47,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
   @Override
   public void endWindow()
   {
+    logger.info("processed events {}", emitCount);
     if (batchIds.isEmpty()) {
       //Operator.Util.shutdown();
       return;
@@ -110,7 +118,6 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
         totalBatchIds.add(counter);
       }
     }
-
     int numOperators = 0;
 
     if (firstRepartition) {
@@ -122,6 +129,9 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
     else if (totalBatchIds.size() <= 20) {
       numOperators = 1;
     }
+
+    logger.info("called repartition at windowId {} and total emitted tuples {} ", partitions.iterator().next().getPartitionedInstance().windowId, tempEmitTotal);
+    logger.info("new partitions {}",numOperators);
 
     this.firstRepartition = false;
     int tempCounterTotal = totalBatchIds.size();

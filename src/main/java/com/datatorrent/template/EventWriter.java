@@ -36,6 +36,7 @@ public class EventWriter extends AbstractFSWriter<EventId, EventId>
   public void endWindow()
   {
     endOffsets.clear();
+    streamsCache.invalidate(operatorId + "/" + windowIdString);
   }
 
   @Override

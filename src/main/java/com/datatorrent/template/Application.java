@@ -39,9 +39,10 @@ public class Application implements StreamingApplication
     TupleCounter tupleCounter = dag.addOperator("Counter", new TupleCounter());
     ConsoleOutputOperator console = dag.addOperator("Console", new ConsoleOutputOperator());
     EventWriter eventWriter = dag.addOperator("Writer", new EventWriter());
-    dag.addStream("donothingstream", emitter.output, tupleCounter.input);
-    dag.addStream("counterstream", tupleCounter.counterOutput, console.input);
-    dag.addStream("eventwriter", tupleCounter.eventOutput, eventWriter.input);
+
+    dag.addStream("Events", emitter.output, tupleCounter.input);
+    dag.addStream("Counts", tupleCounter.counterOutput, console.input);
+    dag.addStream("Persist", tupleCounter.eventOutput, eventWriter.input);
     dag.setInputPortAttribute(tupleCounter.input, Context.PortContext.STREAM_CODEC, new KryoSerializableStreamCodec<Object>());
     dag.setInputPortAttribute(console.input, Context.PortContext.STREAM_CODEC, new KryoSerializableStreamCodec<Object>());
     dag.setInputPortAttribute(eventWriter.input, Context.PortContext.STREAM_CODEC, new KryoSerializableStreamCodec<Object>());
