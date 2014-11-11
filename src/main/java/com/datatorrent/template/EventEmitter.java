@@ -31,6 +31,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
   private long windowId;
   private transient int operatorId;
   private long activationWindowId;
+  private int throughPut = 1000;
 
   @Override
   public void emitTuples()
@@ -57,7 +58,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
     long batchId = batchIds.poll();
 
     for (int i = 0;
-         i < 1000;
+         i < throughPut;
          i++) {
       eventId.batchId = batchId;
       eventId.tupleId = i;
@@ -130,8 +131,15 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
       numOperators = 1;
     }
 
+    int oldThroughPut = 0;
+    Iterator<Partition<EventEmitter>> itr = partitions.iterator();
+    while(itr.hasNext()){
+      oldThroughPut += itr.next().getPartitionedInstance().throughPut;
+    }
+    int newThroughPut =  oldThroughPut/ numOperators;
+
     logger.info("called repartition at windowId {} and total emitted tuples {} ", partitions.iterator().next().getPartitionedInstance().windowId, tempEmitTotal);
-    logger.info("new partitions {}",numOperators);
+    logger.info("new partitions {}", numOperators);
 
     this.firstRepartition = false;
     int tempCounterTotal = totalBatchIds.size();
@@ -142,6 +150,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
     for (int counter = 0; counter < numOperators; counter++) {
       EventEmitter emitter = new EventEmitter();
       emitter.batchIds = new LinkedList<Long>();
+      emitter.throughPut = newThroughPut;
 
       for (int batchCounter = 0;
            batchCounter < newCount;
@@ -151,6 +160,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
 
       if (counter == 0) {
         emitter.emitCount = tempEmitTotal;
+        emitter.throughPut = oldThroughPut - newThroughPut * (numOperators -1);
         int remainder = tempCounterTotal % numOperators;
 
         for (int remainderCounter = 0;
