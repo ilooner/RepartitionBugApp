@@ -40,14 +40,14 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
   @Override
   public void beginWindow(long windowId)
   {
-    logger.debug("prev windowId = {}, windowId = {}", this.windowId, windowId);
+    logger.info("processed events {}", emitCount);
+    logger.info("prev windowId = {}, windowId = {}", this.windowId, windowId);
     this.windowId = windowId;
   }
 
   @Override
   public void endWindow()
   {
-    logger.info("processed events {}", emitCount);
     if (batchIds.isEmpty()) {
       //Operator.Util.shutdown();
       return;
@@ -124,7 +124,7 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
       numOperators = 10;
     }
     else if (totalBatchIds.size() > 20) {
-      numOperators = random.nextInt(10) + 1;
+      numOperators = random.nextInt(10) + 2;
     }
     else if (totalBatchIds.size() <= 20) {
       numOperators = 1;
@@ -173,9 +173,9 @@ public class EventEmitter implements InputOperator, Partitioner<EventEmitter>, S
   @Override
   public void partitioned(Map<Integer, Partition<EventEmitter>> partitions)
   {
-    logger.debug("processed = {}", processed);
+    logger.info("processed = {}", processed);
     for (Partition<EventEmitter> p : partitions.values()) {
-      logger.debug("tobeprocessed = {}", p.getPartitionedInstance().batchIds);
+      logger.info("tobeprocessed = {}", p.getPartitionedInstance().batchIds);
     }
 
     for (long l : processed) {
